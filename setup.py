@@ -64,7 +64,7 @@ setup(
     name = "primitiv",
     version = "0.0.1",
     description = "primitiv: A Neural Network Toolkit. (Python frontend)",
-    url = "https://github.com/odashi/primitiv",
+    url = "https://github.com/primitiv/python-primitiv",
     author = "Koichi Akabe",
     author_email = "vbkaisetsu at gmail.com",
     classifiers=[
