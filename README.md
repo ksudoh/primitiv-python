@@ -40,3 +40,9 @@ You also can use `LIBRARY_PATH` and `CPLUS_INCLUDE_PATH` depending on your envir
 
 CUDA is not available in the default settings. Please add `--enable-cuda` option
 to all commands above if you want to enable CUDA.
+
+For developers
+---------------------------------
+
+To generate a tar ball with primitiv core library, run `setup.py sdist` command with
+`--bundle-core-library` option.
