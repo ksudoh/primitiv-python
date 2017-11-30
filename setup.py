@@ -100,6 +100,12 @@ setup_kwargs = {}
 if build_core:
     setup_kwargs["cmake_source_dir"] = "primitiv-core"
     setup_kwargs["cmake_install_dir"] = "./"
+    setup_kwargs["setup_requires"] = ["scikit-build"]
+    setup_kwargs["cmake_args"] = []
+    if enable_cuda:
+        setup_kwargs["cmake_args"].append("-DPRIMITIV_USE_CUDA=ON")
+    if enable_opencl:
+        setup_kwargs["cmake_args"].append("-DPRIMITIV_USE_OPENCL=ON")
 
 with open(os.path.join(dirname, "MANIFEST.in"), "w") as fp:
     print("include README.md", file=fp)
