@@ -1,12 +1,31 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import numpy as np
 
-from setuptools import setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
+from setuptools.extension import Extension
+from Cython.Build import build_ext
 
+dirname = os.path.dirname(os.path.abspath(__file__))
+
+build_core = os.path.exists(os.path.join(dirname, "primitiv-core/CMakeLists.txt"))
+if build_core:
+    from skbuild import setup
+else:
+    from setuptools import setup
+
+bundle_core_library = False
+if "--bundle-core-library" in sys.argv:
+    if not build_core:
+        print("primitiv-core/CMakeLists.txt is not found", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Run the following command to download primitiv core library:", file=sys.stderr)
+        print("  git clone https://github.com/primitiv/primitiv.git primitiv-core", file=sys.stderr)
+        print("", file=sys.stderr)
+        sys.exit(1)
+    bundle_core_library = True
+    sys.argv.remove("--bundle-core-library")
 enable_cuda = False
 if "--enable-cuda" in sys.argv:
     enable_cuda = True
@@ -17,12 +36,29 @@ if "--enable-opencl" in sys.argv:
     sys.argv.remove("--enable-opencl")
 
 def extension_common_args(*args, **kwargs):
-    return Extension(*args, **kwargs,
-        language="c++",
-        libraries=["primitiv"],
-        include_dirs=[np.get_include()],
-        extra_compile_args=["-std=c++11"],
-    )
+    if build_core:
+        return Extension(*args, **kwargs,
+            language="c++",
+            libraries=["primitiv"],
+            library_dirs = ["_skbuild/cmake-install/lib"],
+            include_dirs=[
+                np.get_include(),
+                "_skbuild/cmake-install/include",
+                "python_primitiv/primitiv",
+                os.path.join(dirname, "primitiv"),
+            ],
+            extra_compile_args=["-std=c++11"],
+        )
+    else:
+        return Extension(*args, **kwargs,
+            language="c++",
+            libraries=["primitiv"],
+            include_dirs=[
+                np.get_include(),
+                os.path.join(dirname, "primitiv"),
+            ],
+            extra_compile_args=["-std=c++11"],
+        )
 
 ext_modules = [
     extension_common_args("primitiv._shape",
@@ -60,6 +96,18 @@ if enable_opencl:
     ext_modules.append(extension_common_args("primitiv.devices._opencl_device",
                                              sources=["primitiv/devices/_opencl_device.pyx"]))
 
+setup_kwargs = {}
+if build_core:
+    setup_kwargs["cmake_source_dir"] = "primitiv-core"
+    setup_kwargs["cmake_install_dir"] = "./"
+
+with open(os.path.join(dirname, "MANIFEST.in"), "w") as fp:
+    print("include README.md", file=fp)
+    print("recursive-include primitiv *.pyx *.pxd *.h", file=fp)
+    print("exclude primitiv/_optimizer_api.h", file=fp)
+    if bundle_core_library:
+        print("recursive-include primitiv-core *", file=fp)
+
 setup(
     name = "primitiv",
     version = "0.0.1",
@@ -77,7 +125,8 @@ setup(
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    ext_modules = cythonize(ext_modules, build_dir="build"),
+    ext_modules = ext_modules,
+    cmdclass={'build_ext': build_ext},
     packages = [
         "primitiv",
         "primitiv.devices",
@@ -88,4 +137,5 @@ setup(
         "cython",
         "numpy",
     ],
+    **setup_kwargs,
 )

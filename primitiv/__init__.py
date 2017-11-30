@@ -1,3 +1,34 @@
+def _load_libprimitiv():
+    from ctypes import cdll
+    import sys
+    import os
+
+    if sys.platform == "linux":
+        library_filepath = "lib/libprimitiv.so"
+    elif sys.platform == "darwin":
+        library_filepath = "lib/libprimitiv.dylib"
+    else:
+        # Unknown platform
+        return
+
+    try:
+        cdll.LoadLibrary(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            library_filepath
+        ))
+        return
+    except Exception:
+        pass
+    try:
+        cdll.LoadLibrary(os.path.join(sys.exec_prefix, library_filepath))
+        return
+    except Exception:
+        # load system library
+        pass
+
+_load_libprimitiv()
+
 from primitiv._device import Device
 from primitiv._graph import Graph
 from primitiv._initializer import Initializer
