@@ -1,7 +1,8 @@
 def _load_libprimitiv():
-    from ctypes import cdll
+    import ctypes
     import sys
     import os
+    import site
 
     if sys.platform == "linux":
         library_filepath = "lib/libprimitiv.so"
@@ -12,16 +13,32 @@ def _load_libprimitiv():
         return
 
     try:
-        cdll.LoadLibrary(os.path.join(
+        ctypes.CDLL(os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "..",
+            "../_skbuild/cmake-install",
             library_filepath
-        ))
+        ), mode=ctypes.RTLD_GLOBAL)
         return
     except Exception:
         pass
     try:
-        cdll.LoadLibrary(os.path.join(sys.exec_prefix, library_filepath))
+        ctypes.CDLL(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..",
+            library_filepath
+        ), mode=ctypes.RTLD_GLOBAL)
+        return
+    except Exception:
+        pass
+    try:
+        ctypes.CDLL(os.path.join(sys.exec_prefix, library_filepath),
+                    mode=ctypes.RTLD_GLOBAL)
+        return
+    except Exception:
+        pass
+    try:
+        ctypes.CDLL(os.path.join(site.getuserbase(), library_filepath),
+                    mode=ctypes.RTLD_GLOBAL)
         return
     except Exception:
         # load system library

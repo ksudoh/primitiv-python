@@ -44,7 +44,6 @@ def extension_common_args(*args, **kwargs):
             include_dirs=[
                 np.get_include(),
                 "_skbuild/cmake-install/include",
-                "python_primitiv/primitiv",
                 os.path.join(dirname, "primitiv"),
             ],
             extra_compile_args=["-std=c++11"],
